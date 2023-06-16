@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 contract AtomicSwap {
     enum SwapMessageType {
@@ -89,7 +90,7 @@ contract AtomicSwap {
         SwapMessageType
     );
 
-    uint8 private orderID;
+    uint8 public orderID;
     mapping(uint8 => Order) public orders;
 
     modifier onlyMaker(uint8 orderId) {
@@ -135,7 +136,7 @@ contract AtomicSwap {
         );
         require(
             expirationTimestamp > block.timestamp,
-            "ExpirationTimestamp should be greater than zero"
+            "ExpirationTimestamp should be greater than creationTimestamp"
         );
 
         MakeSwapMsg memory makeSwapMsg = MakeSwapMsg({
@@ -188,14 +189,13 @@ contract AtomicSwap {
         Coin memory sellToken,
         address takerReceivingAddress
     ) public {
-        require(orderId > 0, "OrderId should not be zero");
         require(
             sellToken.token != address(0),
-            "SellToken should not be zero address"
+            "SellToken should not be zero address in takeSwap"
         );
         require(
             sellToken.amount > 0,
-            "SellToken mount should not be zero amount"
+            "SellToken mount should not be zero amount in takeSwap"
         );
         require(
             takerReceivingAddress != address(0),
@@ -254,7 +254,6 @@ contract AtomicSwap {
     }
 
     function cancelSwap(uint8 orderId) public onlyMaker(orderId) {
-        require(orderId > 0, "OrderId should not be zero");
         Order storage order = orders[orderId];
         require(order.status == Status.INITIAL, "Order cannot be cancelled");
 
